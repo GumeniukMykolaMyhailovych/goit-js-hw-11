@@ -4,40 +4,38 @@ import injectHTML from 'vite-plugin-html-inject';
 import FullReload from 'vite-plugin-full-reload';
 import SortCss from 'postcss-sort-media-queries';
 
-export default defineConfig(({ command }) => {
-  return {
+export default defineConfig(({ command }) => ({
+  // base для GitHub Pages
+  base: command === 'serve' ? '/' : '/goit-js-hw-11/',
 
-    base: command === 'serve' ? '/' : '/goit-js-hw-11/',
-    
-    define: {
-      [command === 'serve' ? 'global' : '_global']: {},
-    },
+  // папка з твоїм кодом
+  root: 'src',
 
-    root: 'src',
+  build: {
+    // результат збірки у корень проекту dist
+    outDir: '../dist',
+    emptyOutDir: true,
 
-    build: {
-      sourcemap: true,
-      outDir: '../dist',
-      emptyOutDir: true,
-      rollupOptions: {
-        input: glob.sync('./src/*.html'),
-        
-        output: {
-          manualChunks(id) {
-            if (id.includes('node_modules')) {
-              return 'vendor';
-            }
-          },
-          entryFileNames: chunkInfo => chunkInfo.name === 'commonHelpers' ? 'commonHelpers.js' : '[name].js',
-          assetFileNames: assetInfo => assetInfo.name && assetInfo.name.endsWith('.html') ? '[name].[ext]' : 'assets/[name]-[hash][extname]',
-        },
+    rollupOptions: {
+      // всі html файли у src автоматично збираються
+      input: glob.sync('./src/*.html'),
+
+      output: {
+        // всі assets (css, зображення, шрифти) у папку assets з хешем
+        assetFileNames: 'assets/[name]-[hash][extname]',
+        // JS файли з хешем
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
       },
     },
+  },
 
-    plugins: [
-      injectHTML(),
-      FullReload(['./src/**/**.html']),
-      SortCss({ sort: 'mobile-first' }),
-    ],
-  };
-});
+  plugins: [
+    // інжекція змінних у html
+    injectHTML(),
+    // live reload при зміні html
+    FullReload(['./src/**/*.html']),
+    // сортування медіа-запитів у css
+    SortCss({ sort: 'mobile-first' }),
+  ],
+}));
